@@ -1,0 +1,118 @@
+#! /usr/bin/perl
+
+use strict;
+use warnings;
+use 5.01;
+
+
+use URI;
+use Web::Scraper;
+use Encode qw( decode );
+use Text::MicroMason;
+use LWP::UserAgent;
+use HTTP::Request::Common;
+use File::Copy::Recursive qw( rcopy );
+use Path::Class;
+use Data::Dumper;
+
+
+my %opt;
+use App::Options 
+  (
+   values => \%opt,
+   option => {
+              id       => 'type=string',
+              password => 'type=string',
+              template => { type => 'string',
+                            default =>  dir(file(__FILE__)->parent->absolute,
+                                           'template')->stringify},
+              out      => 'type=string;default=out',
+             }
+  );
+
+
+#binmode *STDOUT ,;
+
+use 5.01;
+
+sub _get_body{
+  my $head = shift;
+  my $cond = shift;
+  my @body;
+  my $parent = $head->parent->content;
+  my $pos    = $head->pindex;
+  for(;;){
+    my $node = $parent->[++$pos];
+    last unless defined $node;
+    if( ref $node ){
+      last if $cond->($node);
+      push @body, $node->as_XML;
+    }
+    else {
+      push @body, $node;
+    }
+  }
+  return join ("", @body);
+}
+
+my $s = scraper {
+  my $tree = shift;
+  process '//div[contains(string(@class),"body")]', 'entry' => scraper {
+    process 'h3' => title => sub{
+      my $head   = shift;
+      return { title =>  $head->as_text,
+               body  =>
+               _get_body( $head, sub{
+                            my $node = shift;
+                            ((lc($node->tag) eq 'h4') or
+                             (lc($node->tag) eq 'p' and
+                              lc($node->attr('class')) eq 'sectionfooter'))
+                          }) };
+    };
+
+    process 'h4' => 'sections[]' => sub{
+      my $head    = shift;
+      return {  title => $head->as_text,
+                body  =>
+                _get_body( $head, sub{
+                            my $node = shift;
+                             (( lc( $node->tag ) eq 'h4'  ) or
+                              ( lc( $node->tag ) eq 'p'   and
+                                lc( $node->attr('class') ) eq 'sectionfooter')
+                             )
+                           } ) };
+    }
+  };
+  result 'entry';
+};
+
+my $uri = URI->new( shift @ARGV );
+my $ua = LWP::UserAgent->new();
+$ua->creddentials( $uri->host,
+                   '',
+                   $opt{id},
+                   $opt{password} ) if $opt{id} and $opt{password};
+
+my $slide_template = undef;
+my $template = dir( $opt{template} );
+my $out = dir( $opt{out} );
+mkdir $out unless-d $out;
+foreach my $content ( $template->children ){
+  if( $content->basename eq 'slide.html' ){
+    $slide_template = $content;
+  } else {
+    rcopy $content->stringify, file( $out, $content->basename )->stringify;
+  }
+}
+
+$s->user_agent( $ua );
+my $res = $s->scrape( $uri );
+my $mason = Text::MicroMason->new( qw( -SafeServerPages ));
+my $code  = $mason->compile( text => join "", $slide_template->slurp );
+my $html  = file( $out , 'slide.html');
+my $w = $html->openw;
+$w->binmode( ':encoding(utf-8)' );
+print $w $code->(%$res);
+$w->close;
+
+__END__

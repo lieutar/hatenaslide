@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd"
+>
+<html lang=ja>
+<head>
+<meta http-equiv=Content-Type        content="text/html; charset=UTF-8">
+<title><%=$ARGS{title}->{title}%></title>
+<meta http-equiv=Content-Style-Type  content="text/css">
+<meta http-equiv=Content-Script-Type content="text/javascript">
+<style type="text/css">
+
+body {
+  background: #DDDFE4  url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAKACAYAAABdZhLdAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAN2wAADdsBmV8UDwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABFSURBVEiJY/j///9/JgYGBgY4gZNLX4lR20ZtG9m2DagzBkkYDGfbBokzRm0btQ2XxOB01ahtQ922QeKMUduoWgqQQQAA5EMHCwDJoUwAAAAASUVORK5CYII=") repeat-x;
+  color: #345;
+}
+
+h1, h2, h3, h4, h5, h6 {
+ margin: 0px;
+ padding: 0px;
+ line-height: 100%;
+ color: #C93;
+}
+
+h1 {
+ color: #CBC;
+ font-size: 80px;
+}
+
+div.slide {
+  position:absolute;
+  display: none;
+  padding: 1em;
+  z-index: 1000;
+}
+
+div#decor-title {
+ position: fixed;
+ bottom: 20px;
+ right: 20px;
+ font-size: 80px;
+ font-weight: 900;
+ color: #FFF;
+ opacity: 0.5;
+ text-align: right;
+ line-height: 100%;
+ font-style: italic;
+}
+
+pre {
+  font-size: 80%;
+  line-height: 100%;
+  border: dashed 1px #ccc;
+  padding: 1ex;
+  margin: 1ex;
+ background: #FFF;
+}
+
+
+#navi a {
+  text-decoration: none;
+ color: #CCC;
+}
+
+#navi a:hover {
+ color: orange;
+}
+
+.page-indicator {
+  font-size: 11px;
+  text-align:center;
+  white-space:nowrap;
+  200px;
+}
+
+.page-indicator .current {
+  font-size: 20px;
+  font-weight: 900;
+  color: #c33;
+}
+
+span.sectioncategory { display: none; }
+
+.synSpecial    { color: #e93; }
+.synType       { color: #393; }
+.synComment    { color: #999; }
+.synPreProc    { color: #987; }
+.synIdentifier { color: #39c; }
+.synConstant   { color: #c36; }
+.synStatement  { color: #c93; }
+
+.pageNum {
+ position: fixed;
+ font-size: 100px;
+ bottom: 10px;
+ right: 10px;
+ border-width: 900;
+ color: #F63;
+}
+
+</style>
+<script type="text/javascript" src="KaeL.js"></script>
+<script type="text/javascript" src="dtk.js"></script>
+<script type="text/javascript" src="slide.js"></script>
+</head>
+<body>
+<div class="slide">
+<h1><%=$ARGS{title}->{title}%></h1>
+<div class="title-body">
+<%raw=$ARGS{title}->{body}%>
+</div>
+</div>
+<%
+  foreach my $sect ( @{$ARGS{sections}}){
+%>
+<div class="slide">
+<h2><%=$sect->{title}%></h2>
+<%raw=$sect->{body}%>
+</div>
+<%
+  }
+%>
+<div id="decor-title"><%=$ARGS{title}->{title}%></div>
+</body>
+</html>
